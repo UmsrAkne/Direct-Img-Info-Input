@@ -78,6 +78,7 @@ def on_after_component(component, **_kwargs):
             # --- D&D時の処理 ---
             def on_image_dropped(img_path, cache, index):
                 parsed = extract_and_apply(img_path)
+                parsed["path"] = img_path
                 cache = cache or []
                 cache.append(parsed)
                 index = len(cache) - 1
@@ -107,7 +108,53 @@ def on_after_component(component, **_kwargs):
                 _js="direct_i3_on_click",
             )
 
-        print("[Direct-i3] UI injected and ready!")  #
+            def on_prev(cache, index):
+                if not cache:
+                    return cache, index, None, "", json.dumps({}, ensure_ascii=False)
+                index = max(0, index - 1)
+                info_dict = cache[index]
+                img_path = (
+                    info_dict.get("path", "") if isinstance(info_dict, dict) else None
+                )
+
+                return (
+                    cache,
+                    index,
+                    img_path,
+                    img_path,
+                    json.dumps(info_dict, ensure_ascii=False),
+                )
+
+            def on_next(cache, index):
+                if not cache:
+                    return cache, index, None, "", json.dumps({}, ensure_ascii=False)
+                index = min(len(cache) - 1, index + 1)
+                info_dict = cache[index]
+                img_path = (
+                    info_dict.get("path", "") if isinstance(info_dict, dict) else ""
+                )
+
+                return (
+                    cache,
+                    index,
+                    img_path,
+                    img_path,
+                    json.dumps(info_dict, ensure_ascii=False),
+                )
+
+            prev_btn.click(
+                fn=on_prev,
+                inputs=[cache_state, index_state],
+                outputs=[cache_state, index_state, img, path_box, info_box],
+                _js=None,
+            )
+
+            next_btn.click(
+                fn=on_next,
+                inputs=[cache_state, index_state],
+                outputs=[cache_state, index_state, img, path_box, info_box],
+                _js=None,
+            )
 
 
 script_callbacks.on_after_component(on_after_component)
