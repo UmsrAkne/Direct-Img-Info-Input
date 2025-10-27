@@ -83,47 +83,12 @@ def on_after_component(component, **_kwargs):
                 index = len(cache) - 1
                 return cache, index, img_path, json.dumps(parsed, ensure_ascii=False)
 
-            # 💡 修正: _js に JavaScript の実行コードを直接記述
-            # arguments[3] は info_box の値（JSON文字列）
-            js_on_upload = f"""
-                (cache, index, path_box) => {{
-                    // 数秒実行を遅延させる（GradioがDOMを更新するのを待つ）
-                    setTimeout(() => {{ 
-                        try {{
-                            const info_box_parent = document.getElementById("direct_i3_info_box");
-                            let info_box_value = "";
-
-                            if (info_box_parent) {{
-                                // 子要素の <textarea> を探す
-                                const textarea = info_box_parent.querySelector('textarea');
-                                
-                                if (textarea) {{
-                                    // <textarea>要素から value を取得
-                                    info_box_value = textarea.value;
-                                }}
-                            }}
-
-                            console.log("[Direct-i3] extract_and_apply result:", info_box_value);
-                            
-                            // 値が空でなければパースと適用
-                            if (info_box_value) {{
-                                const info = JSON.parse(info_box_value);
-                                applyImageInfo(info);
-                            }}
-                        }} catch (e) {{
-                            console.error("[Direct-i3] Failed to parse JSON on upload:", e);
-                        }}
-                    }}, 2000); // 待機
-
-                    return [cache, index, path_box];
-                }}
-            """
             # Gradio 3.x以降では、引数を明示的に書いた方が安定します。
             img.upload(
                 fn=on_image_dropped,
                 inputs=[img, cache_state, index_state],
                 outputs=[cache_state, index_state, path_box, info_box],
-                _js=js_on_upload,
+                _js="direct_i3_on_upload",
             )
 
             # --- Reapplyボタンの処理 ---
@@ -135,47 +100,11 @@ def on_after_component(component, **_kwargs):
                 info_dict = cache[index]
                 return cache, json.dumps(info_dict, ensure_ascii=False)  # 戻り値は2つ
 
-            # 💡 修正: _js に JavaScript の実行コードを直接記述
-            # arguments[1] は info_box の値（JSON文字列）
-            js_on_reapply = """
-            (cache, info_box) => {{
-                // Gradio が info_box を更新するのを待つ
-                setTimeout(() => {{
-                    try {{
-                        const info_box_parent = document.getElementById("direct_i3_info_box");
-                        let info_box_value = "";
-
-                        if (info_box_parent) {{
-                            // 子要素の <textarea> を探す
-                            const textarea = info_box_parent.querySelector('textarea');
-                            if (textarea) {{
-                                // <textarea>要素から value を取得
-                                info_box_value = textarea.value;
-                            }}
-                        }}
-
-                        console.log("[Direct-i3] reapply extract result:", info_box_value);
-
-                        // 値が空でなければパースと適用
-                        if (info_box_value) {{
-                            const info = JSON.parse(info_box_value);
-                            applyImageInfo(info);
-                        }}
-                    }} catch (e) {{
-                        console.error("[Direct-i3] Failed to parse JSON on reapply:", e);
-                    }}
-                }}, 1500); // ボタン押下はuploadより遅延を短めにしてもOK（1〜1.5秒程度）
-
-                // Pythonの引数をそのまま返す（これを忘れると ValueError になる）
-                return [cache, info_box];
-            }}
-            """
-
             reapply_btn.click(
                 fn=on_reapply,
                 inputs=[cache_state, index_state],
                 outputs=[cache_state, info_box],
-                _js=js_on_reapply,
+                _js="direct_i3_on_click",
             )
 
         print("[Direct-i3] UI injected and ready!")  #
