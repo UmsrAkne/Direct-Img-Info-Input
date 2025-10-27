@@ -6,7 +6,7 @@ import json
 
 
 def parse_png_info(info_text):
-    """PNG info文字列から主要項目を抽出"""
+    # extract metadata from PNG info text
     if isinstance(info_text, tuple):
         info_text = info_text[0]
 
@@ -37,7 +37,7 @@ def parse_png_info(info_text):
 
 
 def extract_and_apply(img_path):
-    """画像のメタ情報を抽出して返す"""
+    # return extracted metadata as a dict
     if not img_path:
         return {}
 
@@ -51,7 +51,7 @@ def extract_and_apply(img_path):
 
 
 def on_after_component(component, **_kwargs):
-    """txt2imgタブにUIを追加"""
+    # add ui on txt2img tab
     if getattr(component, "elem_id", "") == "txt2img_script_container":
         with gr.Accordion(
             "Direct Img Info Input", open=False, elem_id="direct_i3_accordion"
@@ -75,7 +75,7 @@ def on_after_component(component, **_kwargs):
                 reapply_btn = gr.Button("Reapply", elem_id="direct_i3_reapply_btn")
                 next_btn = gr.Button("→", elem_id="direct_i3_next_btn")
 
-            # --- D&D時の処理 ---
+            # Drag and drop image handling
             def on_image_dropped(img_path, cache, index):
                 parsed = extract_and_apply(img_path)
                 parsed["path"] = img_path
@@ -84,7 +84,6 @@ def on_after_component(component, **_kwargs):
                 index = len(cache) - 1
                 return cache, index, img_path, json.dumps(parsed, ensure_ascii=False)
 
-            # Gradio 3.x以降では、引数を明示的に書いた方が安定します。
             img.upload(
                 fn=on_image_dropped,
                 inputs=[img, cache_state, index_state],
@@ -92,14 +91,13 @@ def on_after_component(component, **_kwargs):
                 _js="direct_i3_on_upload",
             )
 
-            # --- Reapplyボタンの処理 ---
-            # 💡 修正: info_box も outputs に含め、on_reapply 関数を定義
+            # Reapply button handling
             def on_reapply(cache, index):
                 if not cache or index >= len(cache):
                     return cache, json.dumps({}, ensure_ascii=False)
 
                 info_dict = cache[index]
-                return cache, json.dumps(info_dict, ensure_ascii=False)  # 戻り値は2つ
+                return cache, json.dumps(info_dict, ensure_ascii=False)
 
             reapply_btn.click(
                 fn=on_reapply,
@@ -108,6 +106,7 @@ def on_after_component(component, **_kwargs):
                 _js="direct_i3_on_click",
             )
 
+            # Prev/Next button handling
             def on_prev(cache, index):
                 if not cache:
                     return cache, index, None, "", json.dumps({}, ensure_ascii=False)

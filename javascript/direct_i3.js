@@ -3,7 +3,7 @@ onUiLoaded(() => {
 });
 
 function direct_i3_on_upload(cache, index, path_box) {
-    // GradioがDOMを更新するのを待つ
+    // wait for Gradio to update the DOM
     setTimeout(() => {
         try {
             const info_box_parent = document.getElementById("direct_i3_info_box");
@@ -31,24 +31,24 @@ function direct_i3_on_upload(cache, index, path_box) {
 }
 
 function direct_i3_on_click(cache, info_box) {
-    // Gradio が info_box を更新するのを待つ
+    // wait for Gradio to update the DOM
     setTimeout(() => {
         try {
             const info_box_parent = document.getElementById("direct_i3_info_box");
             let info_box_value = "";
 
             if (info_box_parent) {
-                // 子要素の <textarea> を探す
+
+                // find the child <textarea> element
                 const textarea = info_box_parent.querySelector('textarea');
                 if (textarea) {
-                    // <textarea>要素から value を取得
+                    // get value from <textarea> element
                     info_box_value = textarea.value;
                 }
             }
 
             console.log("[Direct-i3] reapply extract result:", info_box_value);
 
-            // 値が空でなければパースと適用
             if (info_box_value) {
                 const info = JSON.parse(info_box_value);
                 applyImageInfo(info);
@@ -56,15 +56,13 @@ function direct_i3_on_click(cache, info_box) {
         } catch (e) {
             console.error("[Direct-i3] Failed to parse JSON on reapply:", e);
         }
-    }, 1500); // ボタン押下はuploadより遅延を短めにしてもOK（1〜1.5秒程度）
+    }, 1500);
 
-    // Pythonの引数をそのまま返す（これを忘れると ValueError になる）
+    // return the same arguments back to Python to avoid ValueError
     return [cache, info_box];
 }
 
-// --------------------------------------------------
-// メタ情報を txt2img に反映する処理
-// --------------------------------------------------
+// apply extracted image info to txt2img fields
 function applyImageInfo(info) {
     if (!info || typeof info !== "object") return;
     const gr = gradioApp();
