@@ -21,6 +21,7 @@ function direct_i3_on_upload(cache, index, path_box) {
             if (info_box_value) {
                 const info = JSON.parse(info_box_value);
                 applyImageInfo(info);
+                Notification();
             }
         } catch (e) {
             console.error("[Direct-i3] Failed to parse JSON on upload:", e);
@@ -52,6 +53,7 @@ function direct_i3_on_click(cache, info_box) {
             if (info_box_value) {
                 const info = JSON.parse(info_box_value);
                 applyImageInfo(info);
+                Notification();
             }
         } catch (e) {
             console.error("[Direct-i3] Failed to parse JSON on reapply:", e);
@@ -88,4 +90,43 @@ function applyImageInfo(info) {
         setVal("#txt2img_width input", w.trim());
         setVal("#txt2img_height input", h.trim());
     }
+}
+
+function Notification() {
+    // visible toast notification
+    const toast = document.createElement("div");
+    toast.innerText = "Applied metadta from the image";
+    Object.assign(toast.style, {
+        position: "fixed",
+        top: "20px",
+        right: "20px",
+        background: "rgba(230, 90, 0, 0.9)",
+        color: "white",
+        padding: "10px 16px",
+        borderRadius: "12px",
+        fontSize: "14px",
+        zIndex: 9999,
+        opacity: "0",
+        transition: "opacity 0.3s",
+    });
+    document.body.appendChild(toast);
+    requestAnimationFrame(() => (toast.style.opacity = "1"));
+    setTimeout(() => {
+        toast.style.opacity = "0";
+        setTimeout(() => toast.remove(), 300);
+    }, 2000);
+
+    const root = gradioApp().shadowRoot || gradioApp();
+    const box = root.querySelector("#direct_i3_info_box");
+
+    if (!box) {
+        console.warn("[Direct-i3] info_box not found for highlight");
+        return;
+    }
+
+    // glow effect for info_box
+    const textarea = box.querySelector("textarea") || box;
+    textarea.style.transition = "background-color 0.5s";
+    textarea.style.backgroundColor = "rgba(220, 80, 0, 0.6)",
+        setTimeout(() => (textarea.style.backgroundColor = ""), 1000);
 }
