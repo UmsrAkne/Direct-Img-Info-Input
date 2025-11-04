@@ -21,7 +21,7 @@ function direct_i3_on_upload(cache, index, path_box) {
             if (info_box_value) {
                 const info = JSON.parse(info_box_value);
                 applyImageInfo(info);
-                Notification();
+                direct_i3_Notification();
             }
         } catch (e) {
             console.error("[Direct-i3] Failed to parse JSON on upload:", e);
@@ -53,7 +53,7 @@ function direct_i3_on_click(cache, info_box) {
             if (info_box_value) {
                 const info = JSON.parse(info_box_value);
                 applyImageInfo(info);
-                Notification();
+                direct_i3_Notification();
             }
         } catch (e) {
             console.error("[Direct-i3] Failed to parse JSON on reapply:", e);
@@ -92,7 +92,7 @@ function applyImageInfo(info) {
     }
 }
 
-function Notification() {
+function direct_i3_Notification() {
     // visible toast notification
     const toast = document.createElement("div");
     toast.innerText = "Applied metadta from the image";
